@@ -142,15 +142,6 @@ Response: { "decryptedText": "Hello, World!" }
 
 ---
 
-## Academic Details
-
-- **Institution:** REVA University, Bengaluru
-- **Course:** Cryptography and Network Security (CNS)
-- **Academic Year:** 2025–26
-- **Semester:** 6th
-
----
-
 ## Author
 
 **Thomson Sunny**  
