@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CryptoSafe — ChaCha20-Poly1305 Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <span class="badge">CNS Assignment 1</span>
+      <h1>Authenticated Encryption with ChaCha20-Poly1305</h1>
+      <p style="margin-top: 12px; font-size: 16px; color: var(--text-muted);">A secure message storage demonstration utilizing Node.js, MySQL, and modern authenticated encryption for tamper-proof data security.</p>
+      
+      <div class="panel" style="margin-top: 24px; border-left: 4px solid var(--accent); background: var(--bg-subtle);">
+        <p style="font-size: 15px; line-height: 1.6; color: var(--text);">
+          <strong>ChaCha20-Poly1305</strong> is a high-speed, modern <strong>Authenticated Encryption with Associated Data (AEAD)</strong> algorithm. 
+          Originally designed by Daniel J. Bernstein and further refined for standard use by Google, it has become the gold standard for security in 
+          <strong>TLS 1.3</strong>, <strong>OpenSSH</strong>, and <strong>WireGuard</strong>. Unlike older algorithms, it provides both strong 
+          encryption (Privacy) and a cryptographic signature (Integrity) in a single, efficient pass, making it the preferred choice for 
+          mobile devices and secure modern communications.
+        </p>
+      </div>
+
+      <div class="hero-stats" style="margin-top: 32px;">
+        <div class="stat-item">
+          <span>Primary Algorithm</span>
+          <strong>ChaCha20-Poly1305</strong>
+        </div>
+        <div class="stat-item">
+          <span>Verification</span>
+          <strong>Poly1305 Auth Tag</strong>
+        </div>
+        <div class="stat-item">
+          <span>Storage</span>
+          <strong>MySQL Database</strong>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid-main">
+      <!-- Encryption Panel -->
+      <section class="panel">
+        <h2><i data-lucide="shield-check"></i> Encrypt Message</h2>
+        <div class="form-group">
+          <label for="plainText">Message Plaintext</label>
+          <textarea id="plainText" placeholder="Type your secret message here..."></textarea>
+        </div>
+        <button id="encryptBtn" class="btn" type="button">
+          <i data-lucide="lock"></i> Encrypt & Save to Database
+        </button>
+
+        <div class="output-block">
+          <div class="form-group field-with-copy">
+            <label for="encryptedOutput">Generated Ciphertext</label>
+            <textarea id="encryptedOutput" readonly placeholder="Encryption output..."></textarea>
+            <button class="copy-btn" title="Copy Ciphertext" onclick="copyToClipboard('encryptedOutput')">
+              <i data-lucide="copy"></i>
+            </button>
+          </div>
+          
+          <div class="form-group field-with-copy">
+            <label for="nonceOutput">Encryption Nonce</label>
+            <input type="text" id="nonceOutput" readonly placeholder="Numerical Salt..." />
+            <button class="copy-btn" title="Copy Nonce" onclick="copyToClipboard('nonceOutput')">
+              <i data-lucide="copy"></i>
+            </button>
+          </div>
+
+          <div class="form-group field-with-copy">
+            <label for="authTagOutput">Authentication Tag</label>
+            <input type="text" id="authTagOutput" readonly placeholder="Verification tag..." />
+            <button class="copy-btn" title="Copy Auth Tag" onclick="copyToClipboard('authTagOutput')">
+              <i data-lucide="copy"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Decryption Panel -->
+      <section class="panel">
+        <h2><i data-lucide="unlock"></i> Decrypt Message</h2>
+        <div class="form-group">
+          <label for="decryptEncryptedData">Ciphertext to Decrypt</label>
+          <textarea id="decryptEncryptedData" placeholder="Paste the encrypted data here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="decryptNonce">Transaction Nonce</label>
+          <input type="text" id="decryptNonce" placeholder="Paste the nonce here..." />
+        </div>
+
+        <div class="form-group">
+          <label for="decryptAuthTag">Authentication Tag</label>
+          <input type="text" id="decryptAuthTag" placeholder="Paste the tag here..." />
+        </div>
+
+        <button id="decryptBtn" class="btn btn-secondary" type="button">
+          <i data-lucide="key"></i> Verify & Decrypt
+        </button>
+
+        <div class="output-block">
+          <div class="form-group">
+            <label for="decryptedOutput">Recovered Plaintext</label>
+            <textarea id="decryptedOutput" readonly placeholder="Decryption result will appear here..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Records Section -->
+      <section class="panel records-section">
+        <div class="section-header">
+          <div>
+            <h2><i data-lucide="database"></i> Secure Database Records</h2>
+            <p class="text-sm">Historical encrypted entries retrieved directly from the MySQL server.</p>
+          </div>
+          <button id="refreshBtn" class="btn btn-secondary" style="width: auto;" type="button">
+            <i data-lucide="refresh-cw"></i> Refresh
+          </button>
+        </div>
+        <div id="messagesList" class="records-list">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Educational Guide Section -->
+      <section class="panel records-section" style="background: var(--bg-subtle);">
+        <h2 style="margin-bottom: 24px;"><i data-lucide="graduation-cap"></i> How the Algorithm Works (Step-by-Step)</h2>
+        
+        <div class="info-section">
+          <article class="info-card">
+            <h3 style="margin-bottom: 16px;">Core Terminology</h3>
+            <div class="glossary-item">
+              <h3>1. Plaintext</h3>
+              <p>The original, readable message you want to keep secret. For example: "Meeting at 5 PM."</p>
+            </div>
+            <div class="glossary-item">
+              <h3>2. Ciphertext</h3>
+              <p>The encrypted, unreadable version. It looks like random characters. It is generated using a combination of the key and the nonce.</p>
+            </div>
+            <div class="glossary-item">
+              <h3>3. Nonce (Number used Once)</h3>
+              <p>A unique value used for every encryption session. It ensures that the **same message encrypted twice** will look completely different, preventing attackers from recognizing patterns.</p>
+            </div>
+            <div class="glossary-item">
+              <h3>4. Authentication Tag (Auth Tag)</h3>
+              <p>A special digital signature (MAC) that ensures "Integrity." If even one character of the ciphertext or nonce is changed (tempering), the auth tag will no longer match, and decryption will fail.</p>
+            </div>
+          </article>
+
+          <article class="info-card">
+            <h3 style="margin-bottom: 16px;">The Process</h3>
+            <p><strong>Step A: Encryption Flow</strong></p>
+            <ul>
+              <li>The system takes your <strong>Plaintext</strong>.</li>
+              <li>A random 24-digit <strong>Nonce</strong> is generated.</li>
+              <li>ChaCha20 uses a secret key and the nonce to scramble the data into <strong>Ciphertext</strong>.</li>
+              <li>Poly1305 processes the ciphertext to create a unique <strong>Auth Tag</strong>.</li>
+              <li>All three are saved to the database.</li>
+            </ul>
+            
+            <p style="margin-top: 24px;"><strong>Step B: Decryption Flow</strong></p>
+            <ul>
+              <li>The system receives the Ciphertext, Nonce, and Auth Tag.</li>
+              <li>It first recalculates the Auth Tag using the secret key.</li>
+              <li><strong>If it matches:</strong> The message is authentic and is converted back to Plaintext.</li>
+              <li><strong>If it fails:</strong> The system identifies that the data was tampered with and rejects decryption.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
